@@ -1,10 +1,9 @@
 use structopt::StructOpt;
-use std::io::{Write};
-use std::path::{Path};
+use std::io::Write;
+use std::path::Path;
 use std::fs;
 use std::time::SystemTime;
 
-const SRC_DIR: &str = "src/js/app";
 const DEFAULT_SPRAVOCHNIK_BASE_DIR: &str = "premiera_legal_entities";
 
 const SINGULAR_BASE_NAME: &str = "legal_entity";
@@ -12,15 +11,38 @@ const PLURAL_BASE_NAME: &str = "legal_entities";
 
 const DEFAULT_CLI_PARAMETER: &str = "%DEFAULT%";
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
+#[structopt(about = "Tool to make copy of your project or it's part, but with another naming everywhere")]
 struct Cli {
-    #[structopt(parse(from_os_str))]
-    path_to_kinoplan: std::path::PathBuf,
+    #[structopt(subcommand)]
+    cmd: CliCommand
+}
 
-    #[structopt(help = "Название справочника в единственном числе")]
-    singular_name: String,
-    #[structopt(help = "Название справочника во множественном числе", default_value = DEFAULT_CLI_PARAMETER)]
-    plural_name: String
+#[derive(StructOpt, Debug)]
+enum CliCommand {
+    #[structopt(about = "Command with default values of base project which can be changed internally")]
+    Default {
+        #[structopt(parse(from_os_str))]
+        path_to_project: std::path::PathBuf,
+    
+        #[structopt(help = "Target project singular name")]
+        singular_name: String,
+        #[structopt(help = "Target project plural name", default_value = DEFAULT_CLI_PARAMETER)]
+        plural_name: String
+    },
+    Clone {
+        #[structopt(parse(from_os_str))]
+        path_to_project: std::path::PathBuf,
+    
+        #[structopt(help = "Singular name of project you want to use as a base")]
+        base_singular_name: String,
+        #[structopt(help = "Target project singular name")]
+        singular_name: String,
+        #[structopt(help = "Plural name of project you want to use as a base", default_value = DEFAULT_CLI_PARAMETER)]
+        base_plural_name: String,
+        #[structopt(help = "Target project plural name", default_value = DEFAULT_CLI_PARAMETER)]
+        plural_name: String
+    }
 }
 
 struct Naming {
@@ -58,12 +80,12 @@ trait ReplaceNaming {
 impl ReplaceNaming for String {
     fn replace_naming(self, from: &Naming, to: &Naming) -> String {
         self
-            .replace(&from.singular_snake, &to.singular_snake)
             .replace(&from.plural_snake, &to.plural_snake)
-            .replace(&from.singular_lower_camel, &to.singular_lower_camel)
+            .replace(&from.singular_snake, &to.singular_snake)
             .replace(&from.plural_lower_camel, &to.plural_lower_camel)
-            .replace(&from.singular_upper_camel, &to.singular_upper_camel)
+            .replace(&from.singular_lower_camel, &to.singular_lower_camel)
             .replace(&from.plural_upper_camel, &to.plural_upper_camel)
+            .replace(&from.singular_upper_camel, &to.singular_upper_camel)
     }
 }
 
@@ -93,17 +115,40 @@ fn capitalize(s: &str) -> String {
 fn main() {
     let time_start = SystemTime::now();
 
-    let args = Cli::from_args();
+    let base_naming;
+    let target_naming;
+    let path_to_base;
+    let path_to_target;
+
+    match Cli::from_args().cmd {
+        CliCommand::Default { path_to_project, singular_name, plural_name } => {
+            base_naming = Naming::new(SINGULAR_BASE_NAME.to_string(), PLURAL_BASE_NAME.to_string());
+            target_naming = Naming::new(singular_name, plural_name);
+
+            path_to_base = Path::new(&path_to_project)
+                .join(DEFAULT_SPRAVOCHNIK_BASE_DIR);
+            path_to_target = Path::new(&path_to_project)
+                .join("premiera_".to_owned() + &target_naming.plural_snake);
+        },
+
+        CliCommand::Clone {
+            path_to_project,
+            base_singular_name,
+            base_plural_name,
+            singular_name,
+            plural_name
+        } => {
+            base_naming = Naming::new(base_singular_name, base_plural_name);
+            target_naming = Naming::new(singular_name, plural_name);
+
+            path_to_base = Path::new(&path_to_project)
+                .join(&base_naming.plural_snake);
+            path_to_target = Path::new(&path_to_project)
+                .join("premiera_".to_owned() + &target_naming.plural_snake);
+        }
+    }
+
     let mut stack = Vec::new();
-    let base_naming = Naming::new(SINGULAR_BASE_NAME.to_string(), PLURAL_BASE_NAME.to_string());
-    let target_naming = Naming::new(args.singular_name, args.plural_name);
-    
-    let path_to_base = Path::new(&args.path_to_kinoplan)
-        .join(SRC_DIR)
-        .join(DEFAULT_SPRAVOCHNIK_BASE_DIR);
-    let path_to_target = Path::new(&args.path_to_kinoplan)
-        .join(SRC_DIR)
-        .join("premiera_".to_owned() + &target_naming.plural_snake);
 
     println!("Берём за основу: {:?}", &path_to_base);
 
