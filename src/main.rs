@@ -2,6 +2,7 @@ use structopt::StructOpt;
 use std::io::{Write};
 use std::path::{Path};
 use std::fs;
+use std::time::SystemTime;
 
 const SRC_DIR: &str = "src/js/app";
 const DEFAULT_SPRAVOCHNIK_BASE_DIR: &str = "premiera_legal_entities";
@@ -90,11 +91,13 @@ fn capitalize(s: &str) -> String {
 }
 
 fn main() {
+    let time_start = SystemTime::now();
+
     let args = Cli::from_args();
     let mut stack = Vec::new();
     let base_naming = Naming::new(SINGULAR_BASE_NAME.to_string(), PLURAL_BASE_NAME.to_string());
     let target_naming = Naming::new(args.singular_name, args.plural_name);
-
+    
     let path_to_base = Path::new(&args.path_to_kinoplan)
         .join(SRC_DIR)
         .join(DEFAULT_SPRAVOCHNIK_BASE_DIR);
@@ -102,11 +105,13 @@ fn main() {
         .join(SRC_DIR)
         .join("premiera_".to_owned() + &target_naming.plural_snake);
 
-    fs::create_dir(path_to_target).unwrap_or_else(|why| println!("! {:?}", why.kind()));
-
-    println!("Работаем по пути: {:?}", &path_to_base);
+    println!("Берём за основу: {:?}", &path_to_base);
 
     stack.push(path_to_base);
+
+    fs::create_dir(&path_to_target).unwrap_or_else(|why| {
+        println!("! Не могу создать директорию {:?} потому что {:?}", &path_to_target, why.kind())
+    });
 
     while let Some(current_path) = stack.pop() {
         match fs::read_dir(current_path) {
@@ -122,7 +127,9 @@ fn main() {
                         .replace_naming(&base_naming, &target_naming);
 
                     fs::create_dir(target_path)
-                        .unwrap_or_else(|why| println!("! Не могу создать директорию {:?} Потому что {:?}", target_path, why.kind()));
+                        .unwrap_or_else(|why| {
+                            println!("! Не могу создать директорию {:?} потому что {:?}", target_path, why.kind())
+                        });
 
                     stack.push(path);
                 } else {
@@ -133,13 +140,24 @@ fn main() {
                     let path_to_new_file = path.to_str().unwrap().to_string().replace_naming(&base_naming, &target_naming);
 
                     match fs::File::create(&path_to_new_file) {
-                        Err(why) => println!("! Не могу создать файл {:?} Потому что {:?}", &path_to_new_file, why.kind()),
+                        Err(why) => println!("! Не могу создать файл {:?} потому что {:?}", &path_to_new_file, why.kind()),
                         Ok(mut file) => file
                             .write_all(content.as_bytes())
-                            .unwrap_or_else(|_why| println!("! Не могу записать в файл{:?}", &path_to_new_file)),
+                            .unwrap_or_else(|why| {
+                                println!("! Не могу записать в файл {:?} потому что {:?}", &path_to_new_file, why.kind())
+                            }),
                     }
                 }
             },
         }
     }
+
+    println!(
+        "Раздел {:?} создан за {:?} мс",
+        target_naming.singular_snake,
+        SystemTime::now()
+            .duration_since(time_start)
+            .unwrap_or_default()
+            .subsec_millis()
+    );
 }
