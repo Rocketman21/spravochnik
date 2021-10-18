@@ -48,6 +48,8 @@ enum CliCommand {
 struct Naming {
     singular_snake: String,
     plural_snake: String,
+    singular_kebab: String,
+    plural_kebab: String,
     singular_lower_camel: String,
     plural_lower_camel: String,
     singular_upper_camel: String,
@@ -65,6 +67,8 @@ impl Naming {
         Naming {
             singular_snake: singular_name.to_lowercase(),
             plural_snake: plural_name.to_lowercase(),
+            singular_kebab: singular_name.replace("_", "-"),
+            plural_kebab: plural_name.replace("_", "-"),
             singular_lower_camel: to_camel_case(&singular_name, true),
             plural_lower_camel: to_camel_case(plural_name, true),
             singular_upper_camel: to_camel_case(&singular_name, false),
@@ -82,6 +86,8 @@ impl ReplaceNaming for String {
         self
             .replace(&from.plural_snake, &to.plural_snake)
             .replace(&from.singular_snake, &to.singular_snake)
+            .replace(&from.plural_kebab, &to.plural_kebab)
+            .replace(&from.singular_kebab, &to.singular_kebab)
             .replace(&from.plural_lower_camel, &to.plural_lower_camel)
             .replace(&from.singular_lower_camel, &to.singular_lower_camel)
             .replace(&from.plural_upper_camel, &to.plural_upper_camel)
