@@ -148,7 +148,7 @@ fn main() {
             target_naming = Naming::new(singular_name, plural_name);
 
             path_to_base = Path::new(&path_to_project)
-                .join(&base_naming.plural_snake);
+                .join("premiera_".to_owned() + &base_naming.plural_snake);
             path_to_target = Path::new(&path_to_project)
                 .join("premiera_".to_owned() + &target_naming.plural_snake);
         }
