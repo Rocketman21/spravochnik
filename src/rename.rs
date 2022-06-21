@@ -28,7 +28,16 @@ pub fn rename(path_to_project: PathBuf, from: String, to: String) {
                             }),
                     }
 
-                    let new_path = path.to_str().unwrap().to_string().replace(&from, &to);
+                    let new_filename = path
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .and_then(|name| Some(name.replace(&from, &to)))
+                        .expect(&format!("Не могу изменить имя файла, {:?}", path));
+                    let mut new_path = path.clone();
+
+                    new_path.pop();
+                    new_path = new_path.join(new_filename);
+
                     println!("Переименовываю {:?} в {:?}", &path, &new_path);
 
                     std::fs::rename(&path, &new_path)
