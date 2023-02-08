@@ -3,12 +3,12 @@
 С помощью этого CLI инструмента вы можете нарушить все заветы реакта и внаглую копипастить код, но заменив весь нейминг (все имена файлов, функции, переменные) на свой.
 
 ## Установка
-Если у вас уже есть файл программы, скомпилированный под вашу платформу, можете перейти к секции использование. Если нет, и вы хотите скомпилировать его из исходников, вам нужно установить Rust.
+Если у вас уже есть скомпилированный под вашу платформу и установленный файл программы, можете перейти к секции использование. Если нет, и вы хотите скомпилировать его из исходников, вам нужно установить Rust.
 
 После этого перейдите в директорию проекта и выполните команду
 
 ```bash
-cargo build --release
+cargo install --path .
 ```
 
 ## Использование
@@ -28,29 +28,29 @@ cargo build --release
 Вариант использования если нужен нейминг только в ед.ч.:
 
 ```bash
-пусть_к_программе default пусть_к_проекту новый_нейминг
+spravochnik default пусть_к_проекту новый_нейминг
 ```
 
 ```bash
-./target/release/spravochnik default ~/Projects/kinoplan/src/js/app/ ribbon_acceptance
+spravochnik default ~/Projects/kinoplan/src/js/app/ ribbon_acceptance
 ```
 Тоже самое, но если хотите 2 варианта нейминга:
 ```bash
-./target/release/spravochnik default ~/Projects/kinoplan/src/js/app/ legal_entity legal_entities
+spravochnik default ~/Projects/kinoplan/src/js/app/ legal_entity legal_entities
 ```
 
 ### Продвинутый режим
 Выше был показан пример использование команды `default`, но есть и другой вариант - команда `clone`. Разница в том, что `default` берет за основу проект по умолчанию, который задается в исходниках в константах (если собираете из исходников, можно открыть их и изменить на то что нужно).
 
 ```bash
-пусть_к_программе clone пусть_к_проекту основа новый_нейминг [основа_мн_ч] [новый_нейминг_мн_ч]
+spravochnik clone пусть_к_проекту основа новый_нейминг [основа_мн_ч] [новый_нейминг_мн_ч]
 ```
 `[необязательное_поле]`
 
 Обратите внимание, что даже если вам не нужно использовать мн.ч. для нового проекта, но у основы 2 варианта нейминга - их оба все равно нужно указать:
 
 ```bash
-./target/release/spravochnik clone ~/Projects/kinoplan/src/js/app/ position ribbon_acceptance positions
+spravochnik clone ~/Projects/kinoplan/src/js/app/ position ribbon_acceptance positions
 ```
 
 ### Режим переименования файлов
@@ -59,11 +59,11 @@ cargo build --release
 Использование:
 
 ```bash
-пусть_к_программе rename пусть_к_проекту старое_имя новое_имя
+spravochnik rename пусть_к_проекту старое_имя новое_имя
 ```
 
 Например:
 
 ```bash
-./target/release/spravochnik rename ~/Projects/kinoplan/src/js/app/ Premiera Prm
+spravochnik rename ~/Projects/kinoplan/src/js/app/ Premiera Prm
 ```
