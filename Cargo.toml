@@ -5,4 +5,7 @@ authors = ["Суздалев Станислав <stasuz@mail.ru>"]
 edition = "2018"
 
 [dependencies]
+regex = "1.9.5"
 structopt = "0.3.23"
+strum = "0.25.0"
+strum_macros = "0.25.1"
